@@ -6,6 +6,7 @@ License:	Public domain
 Group:		Development
 Source0:	http://ftp.debian.org/debian/pool/main/a/apt-cacher-ng/%{name}_%{version}.orig.tar.xz
 # Source0-md5:	f57a1323404d35f8668911907d9d026b
+Source1:	%{name}.xinetd
 URL:		http://www.unix-ag.uni-kl.de/~bloch/acng/
 BuildRequires:	boost-devel
 #BuildRequires:	bzlib-devel
@@ -30,8 +31,7 @@ low resource usage.
 
 %install
 rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT%{_sbindir} $RPM_BUILD_ROOT%{_libdir}/%{name} $RPM_BUILD_ROOT%{_mandir}/man8/
-install -d $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/ $RPM_BUILD_ROOT%{_sysconfdir}/xinetd.d
+install -d $RPM_BUILD_ROOT{%{_sbindir},%{_libdir}/%{name},%{_mandir}/man8,%{_sysconfdir}/xinetd.d,%{_sysconfdir}/%{name},/var/log/%{name}}
 install -p build/apt-cacher-ng $RPM_BUILD_ROOT%{_sbindir}/%{name}
 install -p build/acngfs $RPM_BUILD_ROOT%{_sbindir}/%{name}
 install -p build/in.acng  $RPM_BUILD_ROOT%{_sbindir}/%{name}
@@ -39,26 +39,8 @@ install -p expire-caller.pl distkill.pl $RPM_BUILD_ROOT%{_libdir}/%{name}
 cp -p doc/man/*.8 $RPM_BUILD_ROOT%{_mandir}/man8
 cp -a conf/{*mirror*,*.html,*.css} $RPM_BUILD_ROOT%{_libdir}/%{name}
 cp -a conf/*.conf $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/
-cd $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/ && cp -s ../..%{_libdir}/%{name}/{*mirror*,*.html,*.css} . && cd -
-install -d $RPM_BUILD_ROOT/var/log/%{name}/
-
-cat <<EOF > $RPM_BUILD_ROOT%{_sysconfdir}/xinetd.d/%{name}
-# default: off
-# description: The %{name} server.
-service %{name}
-{
-	disable		= yes
-	socket_type	= stream
-	protocol	= tcp
-	wait		= no
-	user		= root
-	nice		= 10
-	rlimit_as	= 16M
-	server		= %{_sbindir}/in.acng
-	only_from	= 127.0.0.1
-	server_args = -c %{_sysconfdir}/%{name}
-}
-EOF
+cd $RPM_BUILD_ROOT%{_sysconfdir}/%{name} && cp -s ../..%{_libdir}/%{name}/{*mirror*,*.html,*.css} . && cd -
+cp -p %{SOURCE1} $RPM_BUILD_ROOT%{_sysconfdir}/xinetd.d/%{name}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
